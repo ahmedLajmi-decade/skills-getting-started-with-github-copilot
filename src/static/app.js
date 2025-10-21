@@ -31,7 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     ? (parts[0][0] || "") + (parts[1] ? parts[1][0] : "")
                     : (local[0] || "")
                   ).toUpperCase().slice(0,2);
-                  return `<li><span class="avatar">${initials || "?"}</span><span class="participant-email">${email}</span></li>`;
+                  // Add a delete button with data attributes for activity and email
+                  return `<li>
+                            <span class="avatar">${initials || "?"}</span>
+                            <span class="participant-email">${email}</span>
+                            <button class="participant-remove" data-activity="${encodeURIComponent(name)}" data-email="${encodeURIComponent(email)}" title="Remove participant">✕</button>
+                          </li>`;
                 })
                 .join("")}
             </ul>`
@@ -50,6 +55,44 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         activitiesList.appendChild(activityCard);
+
+          // Attach click handlers for remove buttons (delegation would be better for performance,
+          // but since cards are re-rendered we can attach handlers here)
+          const removeButtons = activityCard.querySelectorAll('.participant-remove');
+          removeButtons.forEach((btn) => {
+            btn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              const activityName = decodeURIComponent(btn.getAttribute('data-activity'));
+              const email = decodeURIComponent(btn.getAttribute('data-email'));
+
+              if (!confirm(`Remove ${email} from ${activityName}?`)) return;
+
+              try {
+                const resp = await fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
+                  method: 'POST'
+                });
+
+                const result = await resp.json();
+                if (resp.ok) {
+                  // Re-fetch activities to update UI
+                  fetchActivities();
+                  messageDiv.textContent = result.message || 'Participant removed';
+                  messageDiv.className = 'success';
+                  messageDiv.classList.remove('hidden');
+                  setTimeout(() => messageDiv.classList.add('hidden'), 4000);
+                } else {
+                  messageDiv.textContent = result.detail || 'Failed to remove participant';
+                  messageDiv.className = 'error';
+                  messageDiv.classList.remove('hidden');
+                }
+              } catch (err) {
+                console.error('Error removing participant:', err);
+                messageDiv.textContent = 'Failed to remove participant';
+                messageDiv.className = 'error';
+                messageDiv.classList.remove('hidden');
+              }
+            });
+          });
 
         // Add option to select dropdown
         const option = document.createElement("option");

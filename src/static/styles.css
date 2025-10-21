@@ -88,7 +88,7 @@ section h3 {
 }
 
 .participants-list {
-  list-style: none;
+  list-style: none; /* ensure bullets hidden */
   padding: 0;
   margin: 0;
   display: flex;
@@ -108,6 +108,22 @@ section h3 {
   border: 1px solid #f0f0f0;
   font-size: 14px;
   color: #333;
+}
+
+/* Remove (delete) button next to participant */
+.participant-remove {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #c62828;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.participant-remove:hover {
+  background-color: rgba(198,40,40,0.08);
 }
 
 .avatar {
